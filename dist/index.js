@@ -1425,11 +1425,11 @@ var require_seedrandom = __commonJS({
   "node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/seedrandom.js"(exports, module) {
     (function(global2, pool3, math) {
       var width = 256, chunks = 6, digits = 52, rngname = "random", startdenom = math.pow(width, chunks), significance = math.pow(2, digits), overflow = significance * 2, mask = width - 1, nodecrypto;
-      function seedrandom5(seed, options, callback) {
+      function seedrandom5(seed, options2, callback) {
         var key = [];
-        options = options == true ? { entropy: true } : options || {};
+        options2 = options2 == true ? { entropy: true } : options2 || {};
         var shortseed = mixkey(flatten3(
-          options.entropy ? [seed, tostring(pool3)] : seed == null ? autoseed() : seed,
+          options2.entropy ? [seed, tostring(pool3)] : seed == null ? autoseed() : seed,
           3
         ), key);
         var arc4 = new ARC4(key);
@@ -1455,7 +1455,7 @@ var require_seedrandom = __commonJS({
         };
         prng.double = prng;
         mixkey(tostring(arc4.S), pool3);
-        return (options.pass || callback || function(prng2, seed2, is_math_call, state) {
+        return (options2.pass || callback || function(prng2, seed2, is_math_call, state) {
           if (state) {
             if (state.S) {
               copy(state, arc4);
@@ -1472,8 +1472,8 @@ var require_seedrandom = __commonJS({
         })(
           prng,
           shortseed,
-          "global" in options ? options.global : this == math,
-          options.state
+          "global" in options2 ? options2.global : this == math,
+          options2.state
         );
       }
       function ARC4(key) {
@@ -1647,7 +1647,7 @@ var KernelBackend = class {
   readSync(dataId) {
     return notYetImplemented("readSync");
   }
-  readToGPU(dataId, options) {
+  readToGPU(dataId, options2) {
     return notYetImplemented("readToGPU");
   }
   numDataIds() {
@@ -3207,9 +3207,9 @@ var Tensor = class {
     }
     return data;
   }
-  dataToGPU(options) {
+  dataToGPU(options2) {
     this.throwIfDisposed();
-    return trackerFn().readToGPU(this.dataId, options);
+    return trackerFn().readToGPU(this.dataId, options2);
   }
   dataSync() {
     this.throwIfDisposed();
@@ -4123,9 +4123,9 @@ var Engine = class {
     const info = this.state.tensorInfo.get(dataId);
     return info.backend.read(dataId);
   }
-  readToGPU(dataId, options) {
+  readToGPU(dataId, options2) {
     const info = this.state.tensorInfo.get(dataId);
-    return info.backend.readToGPU(dataId, options);
+    return info.backend.readToGPU(dataId, options2);
   }
   async time(query) {
     const start = now();
@@ -5907,6 +5907,9 @@ function dispose(container) {
 }
 function keep(result) {
   return ENGINE.keep(result);
+}
+function setBackend(backendName) {
+  return ENGINE.setBackend(backendName);
 }
 function ready() {
   return ENGINE.ready();
@@ -35574,8 +35577,8 @@ var ResourceManager = class {
 var TFHUB_SEARCH_PARAM = "?tfjs-format=file";
 var DEFAULT_MODEL_NAME = "model.json";
 var GraphModel = class {
-  constructor(modelUrl2, loadOptions = {}, tfio = io_exports) {
-    this.modelUrl = modelUrl2;
+  constructor(modelUrl, loadOptions = {}, tfio = io_exports) {
+    this.modelUrl = modelUrl;
     this.loadOptions = loadOptions;
     this.version = "n/a";
     this.io = tfio;
@@ -35740,25 +35743,25 @@ var GraphModel = class {
     this.resourceManager.dispose();
   }
 };
-async function loadGraphModel(modelUrl2, options = {}, tfio = io_exports) {
-  if (modelUrl2 == null) {
+async function loadGraphModel(modelUrl, options2 = {}, tfio = io_exports) {
+  if (modelUrl == null) {
     throw new Error("modelUrl in loadGraphModel() cannot be null. Please provide a url or an IOHandler that loads the model");
   }
-  if (options == null) {
-    options = {};
+  if (options2 == null) {
+    options2 = {};
   }
-  if (options.fromTFHub && typeof modelUrl2 === "string") {
-    modelUrl2 = getTFHubUrl(modelUrl2);
+  if (options2.fromTFHub && typeof modelUrl === "string") {
+    modelUrl = getTFHubUrl(modelUrl);
   }
-  const model2 = new GraphModel(modelUrl2, options, tfio);
+  const model2 = new GraphModel(modelUrl, options2, tfio);
   await model2.load();
   return model2;
 }
-function getTFHubUrl(modelUrl2) {
-  if (!modelUrl2.endsWith("/")) {
-    modelUrl2 = modelUrl2 + "/";
+function getTFHubUrl(modelUrl) {
+  if (!modelUrl.endsWith("/")) {
+    modelUrl = modelUrl + "/";
   }
-  return `${modelUrl2}${DEFAULT_MODEL_NAME}${TFHUB_SEARCH_PARAM}`;
+  return `${modelUrl}${DEFAULT_MODEL_NAME}${TFHUB_SEARCH_PARAM}`;
 }
 
 // node_modules/.pnpm/@tensorflow+tfjs-data@3.20.0_au2niqrxqvhsnv4oetlud656gy/node_modules/@tensorflow/tfjs-data/dist/index.js
@@ -37402,13 +37405,13 @@ var Utf8IteratorImpl = class extends OneToManyIterator {
 
 // node_modules/.pnpm/@tensorflow+tfjs-data@3.20.0_au2niqrxqvhsnv4oetlud656gy/node_modules/@tensorflow/tfjs-data/dist/iterators/file_chunk_iterator.js
 var FileChunkIterator = class extends ByteChunkIterator {
-  constructor(file, options = {}) {
+  constructor(file, options2 = {}) {
     super();
     this.file = file;
-    this.options = options;
+    this.options = options2;
     util_exports.assert(file instanceof Uint8Array || (env().get("IS_BROWSER") ? file instanceof File || file instanceof Blob : false), () => "FileChunkIterator only supports File, Blob and Uint8Array right now.");
-    this.offset = options.offset || 0;
-    this.chunkSize = options.chunkSize || 1024 * 1024;
+    this.offset = options2.offset || 0;
+    this.chunkSize = options2.chunkSize || 1024 * 1024;
   }
   summary() {
     return `FileChunks ${this.file}`;
@@ -37449,7 +37452,7 @@ var FileChunkIterator = class extends ByteChunkIterator {
 };
 
 // node_modules/.pnpm/@tensorflow+tfjs-data@3.20.0_au2niqrxqvhsnv4oetlud656gy/node_modules/@tensorflow/tfjs-data/dist/iterators/url_chunk_iterator.js
-async function urlChunkIterator(url, options = {}, fetchFunc) {
+async function urlChunkIterator(url, options2 = {}, fetchFunc) {
   let urlString;
   let requestInit;
   if (typeof url === "string") {
@@ -37461,7 +37464,7 @@ async function urlChunkIterator(url, options = {}, fetchFunc) {
   const response = await (fetchFunc || util_exports.fetch)(urlString, requestInit);
   if (response.ok) {
     const uint8Array = new Uint8Array(await response.arrayBuffer());
-    return new FileChunkIterator(uint8Array, options);
+    return new FileChunkIterator(uint8Array, options2);
   } else {
     throw new Error(response.statusText);
   }
@@ -37488,10 +37491,10 @@ function isLocalPath(source) {
 
 // node_modules/.pnpm/@tensorflow+tfjs-data@3.20.0_au2niqrxqvhsnv4oetlud656gy/node_modules/@tensorflow/tfjs-data/dist/sources/file_data_source.js
 var FileDataSource = class extends DataSource {
-  constructor(input2, options = {}) {
+  constructor(input2, options2 = {}) {
     super();
     this.input = input2;
-    this.options = options;
+    this.options = options2;
   }
   async iterator() {
     if (isLocalPath(this.input) && env().get("IS_NODE")) {
@@ -48716,7 +48719,7 @@ var MathBackendWebGL = class extends KernelBackend {
     }
     return dTypeVals;
   }
-  readToGPU(dataId, options = {}) {
+  readToGPU(dataId, options2 = {}) {
     const texData = this.texData.get(dataId);
     const { values, shape, slice: slice4, dtype, isPacked, texture } = texData;
     if (dtype === "complex64") {
@@ -48730,7 +48733,7 @@ var MathBackendWebGL = class extends KernelBackend {
         program = new UnaryOpProgram(shape, CLONE);
       }
       const res = this.runWebGLProgram(program, [{ dataId, shape, dtype }], dtype);
-      const gpuResouorce = this.readToGPU(res, options);
+      const gpuResouorce = this.readToGPU(res, options2);
       this.disposeIntermediateTensorInfo(res);
       return gpuResouorce;
     }
@@ -48741,7 +48744,7 @@ var MathBackendWebGL = class extends KernelBackend {
         throw new Error("There is no data on GPU or CPU.");
       }
     }
-    const tmpTarget = this.decode(dataId, options.customTexShape);
+    const tmpTarget = this.decode(dataId, options2.customTexShape);
     const tensorRef = engine().makeTensorFromTensorInfo(tmpTarget);
     const tmpData = this.texData.get(tmpTarget.dataId);
     return Object.assign({ tensorRef }, tmpData.texture);
@@ -59356,10 +59359,13 @@ for (const kernelConfig of kernelConfigs2) {
 }
 
 // src/index.ts
-var modelUrl = "../models/rvm_mobilenetv3_tfjs_int8/model.json";
-var resolution = [640, 480];
+var options = {
+  modelUrl: "../models/mb3-i8/rvm.json",
+  resolution: [960, 640],
+  downsampleRatio: 0.5
+};
 var log5 = (...msg) => console.log(...msg);
-async function drawMatte(fgr, pha, canvas, background) {
+async function drawMatte(fgr, pha, canvas) {
   const rgba = tidy(() => {
     const rgb = fgr !== null ? fgr.squeeze(0).mul(255).cast("int32") : fill([pha.shape[1], pha.shape[2], 3], 255, "int32");
     const a = pha !== null ? pha.squeeze(0).mul(255).cast("int32") : fill([fgr.shape[1], fgr.shape[2], 1], 255, "int32");
@@ -59369,19 +59375,10 @@ async function drawMatte(fgr, pha, canvas, background) {
     fgr.dispose();
   if (pha)
     pha.dispose();
-  const [height, width] = rgba.shape.slice(0, 2);
-  const pixelData = new Uint8ClampedArray(await rgba.data());
-  const imageData = new ImageData(pixelData, width, height);
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (ctx)
-    ctx.putImageData(imageData, 0, 0);
-  if (background)
-    canvas.style.background = background;
+  browser_exports.toPixels(rgba, canvas);
   rgba.dispose();
 }
-async function drawHidden(r, canvas) {
+async function drawRecurrent(r, canvas) {
   const rgba = tidy(() => {
     r = r.unstack(-1);
     r = concat(r, 1);
@@ -59405,15 +59402,17 @@ async function drawHidden(r, canvas) {
   rgba.dispose();
 }
 async function main() {
+  await setBackend("webgl");
   await ready();
+  env().set("WEBGL_USE_SHAPES_UNIFORMS", true);
   log5({ tf: version, backend: getBackend() });
   const video = document.getElementById("video");
   const canvas = document.getElementById("canvas");
   const select4 = document.getElementById("select");
-  video.width = resolution[0];
-  video.height = resolution[1];
-  const webcam2 = await dist_exports2.webcam(video);
-  log5({ webcam: webcam2 });
+  const fps = document.getElementById("fps");
+  video.width = options.resolution[0];
+  video.height = options.resolution[1];
+  const webcam2 = await dist_exports2.webcam(video, {});
   video.onclick = () => {
     if (video.paused)
       video.play();
@@ -59423,37 +59422,32 @@ async function main() {
   video.onplay = () => {
     loop();
   };
-  const model2 = await loadGraphModel(modelUrl);
+  log5({ webcam: webcam2?.stream?.getVideoTracks()?.[0], settings: webcam2?.stream?.getVideoTracks()?.[0].getSettings() });
+  const model2 = await loadGraphModel(options.modelUrl);
   log5({ model: model2 });
   let [r1i, r2i, r3i, r4i] = [tensor(0), tensor(0), tensor(0), tensor(0)];
-  const downsampleRatio = tensor(0.5);
+  const downsampleRatio = tensor(options.downsampleRatio);
   async function loop() {
     if (video.paused)
       return;
-    await nextFrame();
     const img = await webcam2.capture();
-    if (!img)
-      return;
     const src = tidy(() => img.expandDims(0).div(255));
+    const t0 = Date.now();
     const [fgr, pha, r1o, r2o, r3o, r4o] = await model2.executeAsync({ src, r1i, r2i, r3i, r4i, downsample_ratio: downsampleRatio }, ["fgr", "pha", "r1o", "r2o", "r3o", "r4o"]);
+    const t1 = Date.now();
+    fps.innerText = `fps: ${Math.round(1e4 / (t1 - t0)) / 10}`;
     switch (select4.value) {
-      case "recurrent":
-        drawHidden(r1o, canvas);
-        break;
-      case "remove background":
-        drawMatte(fgr.clone(), pha.clone(), canvas, "rgb(0, 0, 0)");
-        break;
-      case "white":
-        drawMatte(fgr.clone(), pha.clone(), canvas, "rgb(255, 255, 255)");
-        break;
-      case "green":
-        drawMatte(fgr.clone(), pha.clone(), canvas, "rgb(120, 255, 155)");
+      case "none":
+        drawMatte(fgr.clone(), pha.clone(), canvas);
         break;
       case "alpha":
-        drawMatte(null, pha.clone(), canvas, "rgb(0, 0, 0)");
+        drawMatte(null, pha.clone(), canvas);
         break;
       case "foreground":
-        drawMatte(fgr.clone(), null, canvas, null);
+        drawMatte(fgr.clone(), null, canvas);
+        break;
+      case "recurrent":
+        drawRecurrent(r1o, canvas);
         break;
       default:
     }

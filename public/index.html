@@ -23,22 +23,21 @@
     <div id="nav" class="nav"></div>
   </nav>
   <header>
-    <div id="header" class="header" style="text-align: right; padding: 16px">
+    <div id="header" class="header" style="position: fixed; top: 0; right: 0; padding: 4px; margin: 16px; background: rgba(0, 0, 0, 0.5); z-index: 10;">
       <label for="select">output</label>
       <select id="select" name="select">
-        <option value="white">white background</option>
-        <option value="green">green background</option>
-        <option value="alpha">alpha</option>
-        <option value="foreground">foreground</option>
+        <option value="none">remove background</option>
+        <option value="alpha">draw alpha channel</option>
+        <option value="foreground">full foreground</option>
         <option value="recurrent">recurrent state</option>
       </select>
+      <div id="fps" style="margin-top: 8px"></div>
     </div>
   </header>
   <main>
     <div id="main" class="main">
-      <br>
-      <video id="video"></video>
-      <canvas id="canvas"></canvas>
+      <video id="video" style="width: 100vw; height: 50vh"></video>
+      <canvas id="canvas" style="width: 100vw; height: 50vh"></canvas>
     </div>
   </main>
   <footer>

@@ -1,12 +1,15 @@
 import * as tf from '@tensorflow/tfjs';
 
-const modelUrl = '../models/rvm_mobilenetv3_tfjs_int8/model.json';
-const resolution = [640, 480];
+const options = {
+  modelUrl: '../models/mb3-i8/rvm.json',
+  resolution: [960, 640],
+  downsampleRatio: 0.5,
+};
 
 const log = (...msg) => console.log(...msg); // eslint-disable-line no-console
 
-async function drawMatte(fgr, pha, canvas, background) {
-  const rgba = tf.tidy(() => {
+async function drawMatte(fgr, pha, canvas: HTMLCanvasElement) {
+  const rgba: tf.Tensor3D = tf.tidy(() => {
     const rgb = (fgr !== null)
       ? fgr.squeeze(0).mul(255).cast('int32')
       : tf.fill([pha.shape[1], pha.shape[2], 3], 255, 'int32');
@@ -17,18 +20,18 @@ async function drawMatte(fgr, pha, canvas, background) {
   });
   if (fgr) fgr.dispose();
   if (pha) pha.dispose();
-  const [height, width] = rgba.shape.slice(0, 2);
+  tf.browser.toPixels(rgba, canvas);
+  /*
   const pixelData = new Uint8ClampedArray(await rgba.data());
   const imageData = new ImageData(pixelData, width, height);
-  canvas.width = width;
-  canvas.height = height;
   const ctx = canvas.getContext('2d');
   if (ctx) ctx.putImageData(imageData, 0, 0);
   if (background) canvas.style.background = background;
+  */
   rgba.dispose();
 }
 
-async function drawHidden(r, canvas) {
+async function drawRecurrent(r, canvas: HTMLCanvasElement) {
   const rgba = tf.tidy(() => {
     r = r.unstack(-1);
     r = tf.concat(r, 1);
@@ -52,15 +55,18 @@ async function drawHidden(r, canvas) {
 }
 
 async function main() {
+  await tf.setBackend('webgl');
   await tf.ready();
+  tf.env().set('WEBGL_USE_SHAPES_UNIFORMS', true);
   log({ tf: tf.version_core, backend: tf.getBackend() });
+
   const video = document.getElementById('video') as HTMLVideoElement;
   const canvas = document.getElementById('canvas') as HTMLCanvasElement;
   const select = document.getElementById('select') as HTMLSelectElement;
-  video.width = resolution[0];
-  video.height = resolution[1];
-  const webcam = await tf.data.webcam(video);
-  log({ webcam });
+  const fps = document.getElementById('fps') as HTMLDivElement;
+  video.width = options.resolution[0];
+  video.height = options.resolution[1];
+  const webcam = await tf.data.webcam(video, { });
   video.onclick = () => {
     if (video.paused) video.play();
     else video.pause();
@@ -68,37 +74,35 @@ async function main() {
   video.onplay = () => {
     loop(); // eslint-disable-line no-use-before-define
   };
+  // @ts-ignore
+  log({ webcam: webcam?.stream?.getVideoTracks()?.[0], settings: webcam?.stream?.getVideoTracks()?.[0].getSettings() });
 
-  const model = await tf.loadGraphModel(modelUrl);
+  const model = await tf.loadGraphModel(options.modelUrl);
   log({ model });
+
   let [r1i, r2i, r3i, r4i] = [tf.tensor(0.0), tf.tensor(0.0), tf.tensor(0.0), tf.tensor(0.0)]; // initialize recurrent state
-  const downsampleRatio = tf.tensor(0.5); // set downsample ratio
+  const downsampleRatio = tf.tensor(options.downsampleRatio); // set downsample ratio
 
   async function loop() { // inference loop
     if (video.paused) return;
-    await tf.nextFrame();
     const img = await webcam.capture();
-    if (!img) return;
     const src = tf.tidy(() => img.expandDims(0).div(255)); // normalize input
+    const t0 = Date.now();
     const [fgr, pha, r1o, r2o, r3o, r4o] = await model.executeAsync({ src, r1i, r2i, r3i, r4i, downsample_ratio: downsampleRatio }, ['fgr', 'pha', 'r1o', 'r2o', 'r3o', 'r4o']) as tf.Tensor[];
+    const t1 = Date.now();
+    fps.innerText = `fps: ${Math.round(10000 / (t1 - t0)) / 10}`;
     switch (select.value) {
-      case 'recurrent':
-        drawHidden(r1o, canvas); // can use r10, r20, r3o, r4o
-        break;
-      case 'remove background':
-        drawMatte(fgr.clone(), pha.clone(), canvas, 'rgb(0, 0, 0)');
-        break;
-      case 'white':
-        drawMatte(fgr.clone(), pha.clone(), canvas, 'rgb(255, 255, 255)');
-        break;
-      case 'green':
-        drawMatte(fgr.clone(), pha.clone(), canvas, 'rgb(120, 255, 155)');
+      case 'none':
+        drawMatte(fgr.clone(), pha.clone(), canvas);
         break;
       case 'alpha':
-        drawMatte(null, pha.clone(), canvas, 'rgb(0, 0, 0)');
+        drawMatte(null, pha.clone(), canvas);
         break;
       case 'foreground':
-        drawMatte(fgr.clone(), null, canvas, null);
+        drawMatte(fgr.clone(), null, canvas);
+        break;
+      case 'recurrent':
+        drawRecurrent(r1o, canvas); // can use r10, r20, r3o, r4o
         break;
       default:
     }
