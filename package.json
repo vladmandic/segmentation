@@ -1,21 +1,21 @@
 {
-  "name": "@vladmandic/TEMPLATE",
+  "name": "@vladmandic/segmentation",
   "version": "0.1.0",
-  "description": "TEMPLATE",
+  "description": "segmentation",
   "sideEffects": false,
   "main": "public/index.js",
   "author": "Vladimir Mandic <mandic00@live.com>",
   "bugs": {
-    "url": "https://github.com/vladmandic/TEMPLATE/issues"
+    "url": "https://github.com/vladmandic/segmentation/issues"
   },
-  "homepage": "https://vladmandic.github.io/TEMPLATE/index.html",
+  "homepage": "https://vladmandic.github.io/segmentation/index.html",
   "license": "MIT",
   "engines": {
     "node": ">=14.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vladmandic/TEMPLATE.git"
+    "url": "git+https://github.com/vladmandic/segmentation.git"
   },
   "scripts": {
     "dev": "build --profile development",
@@ -37,5 +37,8 @@
     "tslib": "^2.4.0",
     "typedoc": "^0.23.15",
     "typescript": "4.8.3"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "^3.20.0"
   }
 }

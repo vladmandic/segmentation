@@ -44,7 +44,7 @@
     "no-restricted-syntax": "off",
     "object-curly-newline":"off",
     "prefer-destructuring":"off",
-    "prefer-template":"off",
+    "prefer-segmentation":"off",
     "radix":"off"
   }
 }

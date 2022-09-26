@@ -1,7 +1,7 @@
-# @vladmandic/TEMPLATE  
+# @vladmandic/segmentation  
 
   Version: **0.1.0**  
-  Description: **TEMPLATE**  
+  Description: **segmentation**  
   
   Author: **Vladimir Mandic <mandic00@live.com>**  
   License: **MIT**  

@@ -1,8 +1,3 @@
-# TEMPLATE
+# Person segmentation using temporal guidance
 
-## Update:
-- `package.json`: name, description, homepage, issues
-- `.build.json`: banner
-- `index.webmanifest`: name, scope, url
-- `public/index.html`: title, name, description, keywords
-
+Credit: <https://github.com/PeterL1n/RobustVideoMatting>
