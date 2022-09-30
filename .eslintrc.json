@@ -2,8 +2,8 @@
   "globals": {},
   "env": {
       "browser": true,
-      "commonjs": true,
-      "node": true,
+      "commonjs": false,
+      "node": false,
       "es2022": true
   },
   "parser": "@typescript-eslint/parser",
@@ -42,6 +42,7 @@
     "no-plusplus":"off",
     "no-param-reassign":"off",
     "no-restricted-syntax": "off",
+    "no-undef": "off",
     "object-curly-newline":"off",
     "prefer-destructuring":"off",
     "prefer-segmentation":"off",

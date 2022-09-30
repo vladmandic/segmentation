@@ -58493,8 +58493,8 @@ async function load(config) {
   return model2;
 }
 function getRGBA(fgr, pha) {
-  const norm2 = (t2) => tidy(() => {
-    const squeeze2 = squeeze(t2, [0]);
+  const norm2 = (r) => tidy(() => {
+    const squeeze2 = squeeze(r, [0]);
     const mul2 = mul(squeeze2, 255);
     const cast5 = cast(mul2, "int32");
     return cast5;
@@ -58555,17 +58555,17 @@ var log5 = (...msg) => console.log("webcam", ...msg);
 var _webcam = class {
   static get track() {
     if (!_webcam.stream)
-      return;
+      return void 0;
     return _webcam.stream.getVideoTracks()[0];
   }
   static get capabilities() {
     if (!_webcam.track)
-      return;
+      return void 0;
     return _webcam.track.getCapabilities ? _webcam.track.getCapabilities() : void 0;
   }
   static get constraints() {
     if (!_webcam.track)
-      return;
+      return void 0;
     return _webcam.track.getConstraints ? _webcam.track.getConstraints() : void 0;
   }
   static get settings() {
@@ -58580,17 +58580,18 @@ var _webcam = class {
     return _webcam.track.label;
   }
   static get paused() {
-    return _webcam.element?.paused;
+    return _webcam.element?.paused || false;
   }
   static get width() {
-    return _webcam.element?.videoWidth;
+    return _webcam.element?.videoWidth || 0;
   }
   static get height() {
-    return _webcam.element?.videoHeight;
+    return _webcam.element?.videoHeight || 0;
   }
 };
 var webcam2 = _webcam;
 __publicField(webcam2, "config", {
+  element: void 0,
   debug: true,
   mode: "front",
   crop: false,
@@ -58599,11 +58600,7 @@ __publicField(webcam2, "config", {
 });
 __publicField(webcam2, "element");
 __publicField(webcam2, "stream");
-__publicField(webcam2, "start", async (videoElement, webcamConfig) => {
-  if (videoElement)
-    _webcam.element = videoElement;
-  else
-    _webcam.element = document.createElement("video");
+__publicField(webcam2, "start", async (webcamConfig) => {
   if (webcamConfig?.debug)
     _webcam.config.debug = webcamConfig?.debug;
   if (webcamConfig?.crop)
@@ -58614,6 +58611,26 @@ __publicField(webcam2, "start", async (videoElement, webcamConfig) => {
     _webcam.config.width = webcamConfig?.width;
   if (webcamConfig?.height)
     _webcam.config.height = webcamConfig?.height;
+  if (webcamConfig?.element) {
+    if (typeof webcamConfig.element === "string") {
+      const el = document.getElementById(webcamConfig.element);
+      if (el && el instanceof HTMLVideoElement) {
+        _webcam.element = el;
+      } else {
+        if (_webcam.config.debug)
+          log5("cannot get dom element", webcamConfig.element);
+        return;
+      }
+    } else if (webcamConfig.element instanceof HTMLVideoElement) {
+      _webcam.element = webcamConfig.element;
+    } else {
+      if (_webcam.config.debug)
+        log5("unknown dom element", webcamConfig.element);
+      return;
+    }
+  } else {
+    _webcam.element = document.createElement("video");
+  }
   const requestedConstraints = {
     audio: false,
     video: {
@@ -58631,11 +58648,11 @@ __publicField(webcam2, "start", async (videoElement, webcamConfig) => {
     if (_webcam.config.debug)
       log5("pause");
   });
-  _webcam.element.addEventListener("click", () => {
+  _webcam.element.addEventListener("click", async () => {
     if (!_webcam.element || !_webcam.stream)
       return;
     if (_webcam.element.paused)
-      _webcam.element.play();
+      await _webcam.element.play();
     else
       _webcam.element.pause();
   });
@@ -58663,8 +58680,8 @@ __publicField(webcam2, "start", async (videoElement, webcamConfig) => {
       _webcam.element.onloadeddata = () => resolve(true);
   });
   await ready2;
-  _webcam.element.play();
-  if (_webcam.config.debug)
+  await _webcam.element.play();
+  if (_webcam.config.debug) {
     log5({
       width: _webcam.width,
       height: _webcam.height,
@@ -58675,8 +58692,9 @@ __publicField(webcam2, "start", async (videoElement, webcamConfig) => {
       constraints: _webcam.constraints,
       capabilities: _webcam.capabilities
     });
+  }
 });
-__publicField(webcam2, "stop", async () => {
+__publicField(webcam2, "stop", () => {
   if (_webcam.config.debug)
     log5("stop");
   if (_webcam.track)
@@ -58703,13 +58721,13 @@ async function main() {
   log6({ tf: version, backend: getBackend() });
   const model3 = await load(segmentationConfig);
   log6({ model: model3 });
+  const numTensors = engine().state.numTensors;
   video.onplay = () => {
     loop();
   };
-  await webcam2.start(video, { crop: true, width: 960, height: 720 });
+  await webcam2.start({ element: "video", crop: true, width: 960, height: 720 });
   if (!webcam2.track)
     fps.innerText = "webcam error";
-  const numTensors = engine().state.numTensors;
   async function loop() {
     if (!webcam2.element || webcam2.paused)
       return;

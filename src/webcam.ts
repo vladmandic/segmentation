@@ -1,6 +1,7 @@
 const log = (...msg) => console.log('webcam', ...msg); // eslint-disable-line no-console
 
-type WebCamConfig = {
+export interface WebCamConfig {
+  element: string | HTMLVideoElement | undefined,
   debug: boolean,
   mode: 'front' | 'back',
   crop: boolean,
@@ -8,60 +9,84 @@ type WebCamConfig = {
   height: number,
 }
 
-export class webcam {
+export class webcam { // eslint-disable-line @typescript-eslint/no-extraneous-class
   public static config: WebCamConfig = {
+    element: undefined,
     debug: true,
     mode: 'front',
     crop: false,
     width: 0,
     height: 0,
-  }
+  };
 
   public static element: HTMLVideoElement | undefined;
   private static stream: MediaStream | undefined;
 
-  public static get track() {
-    if (!webcam.stream) return;
+  public static get track(): MediaStreamTrack | undefined {
+    if (!webcam.stream) return undefined;
     return webcam.stream.getVideoTracks()[0];
   }
 
-  public static get capabilities() {
-    if (!webcam.track) return;
+  public static get capabilities(): MediaTrackCapabilities | undefined {
+    if (!webcam.track) return undefined;
     return webcam.track.getCapabilities ? webcam.track.getCapabilities() : undefined;
   }
 
-  public static get constraints() {
-    if (!webcam.track) return;
+  public static get constraints(): MediaTrackConstraints | undefined {
+    if (!webcam.track) return undefined;
     return webcam.track.getConstraints ? webcam.track.getConstraints() : undefined;
   }
 
-  public static get settings() {
+  public static get settings(): MediaTrackSettings | undefined {
     if (!webcam.stream) return undefined;
     const track: MediaStreamTrack = webcam.stream.getVideoTracks()[0];
     return track.getSettings ? track.getSettings() : undefined;
   }
 
-  public static get label() {
+  public static get label(): string {
     if (!webcam.track) return '';
     return webcam.track.label;
   }
 
-  public static get paused() { return webcam.element?.paused };
+  public static get paused(): boolean {
+    return webcam.element?.paused || false;
+  }
 
-  public static get width() { return webcam.element?.videoWidth };
-  public static get height() { return webcam.element?.videoHeight };
+  public static get width(): number {
+    return webcam.element?.videoWidth || 0;
+  }
 
-  public static start = async (videoElement?: HTMLVideoElement, webcamConfig?: Partial<WebCamConfig>) => {
-    // use or create dom element
-    if (videoElement) webcam.element = videoElement;
-    else webcam.element = document.createElement('video') as HTMLVideoElement;
+  public static get height(): number {
+    return webcam.element?.videoHeight || 0;
+  }
 
+  public static start = async (webcamConfig?: Partial<WebCamConfig>): Promise<void> => {
     // set config
     if (webcamConfig?.debug) webcam.config.debug = webcamConfig?.debug;
     if (webcamConfig?.crop) webcam.config.crop = webcamConfig?.crop;
     if (webcamConfig?.mode) webcam.config.mode = webcamConfig?.mode;
     if (webcamConfig?.width) webcam.config.width = webcamConfig?.width;
     if (webcamConfig?.height) webcam.config.height = webcamConfig?.height;
+
+    // use or create dom element
+    if (webcamConfig?.element) {
+      if (typeof webcamConfig.element === 'string') {
+        const el = document.getElementById(webcamConfig.element);
+        if (el && el instanceof HTMLVideoElement) {
+          webcam.element = el;
+        } else {
+          if (webcam.config.debug) log('cannot get dom element', webcamConfig.element);
+          return;
+        }
+      } else if (webcamConfig.element instanceof HTMLVideoElement) {
+        webcam.element = webcamConfig.element;
+      } else {
+        if (webcam.config.debug) log('unknown dom element', webcamConfig.element);
+        return;
+      }
+    } else {
+      webcam.element = document.createElement('video');
+    }
 
     // set constraints to use
     const requestedConstraints: DisplayMediaStreamConstraints = {
@@ -77,10 +102,10 @@ export class webcam {
 
     // set default event listeners
     webcam.element.addEventListener('play', () => { if (webcam.config.debug) log('play'); });
-    webcam.element.addEventListener('pause', () => { if (webcam.config.debug) log('pause') });
-    webcam.element.addEventListener('click', () => { // pause when clicked on screen and resume on next click
+    webcam.element.addEventListener('pause', () => { if (webcam.config.debug) log('pause'); });
+    webcam.element.addEventListener('click', async () => { // pause when clicked on screen and resume on next click
       if (!webcam.element || !webcam.stream) return;
-      if (webcam.element.paused) webcam.element.play();
+      if (webcam.element.paused) await webcam.element.play();
       else webcam.element.pause();
     });
 
@@ -105,22 +130,24 @@ export class webcam {
       else webcam.element.onloadeddata = () => resolve(true);
     });
     await ready;
-    webcam.element.play(); // start playing
+    await webcam.element.play(); // start playing
 
-    if (webcam.config.debug) log({
-      width: webcam.width,
-      height: webcam.height,
-      label: webcam.label,
-      stream: webcam.stream,
-      track: webcam.track,
-      settings: webcam.settings,
-      constraints: webcam.constraints,
-      capabilities: webcam.capabilities,
-    });
-  }
+    if (webcam.config.debug) {
+      log({
+        width: webcam.width,
+        height: webcam.height,
+        label: webcam.label,
+        stream: webcam.stream,
+        track: webcam.track,
+        settings: webcam.settings,
+        constraints: webcam.constraints,
+        capabilities: webcam.capabilities,
+      });
+    }
+  };
 
-  public static stop = async () => {
+  public static stop = (): void => {
     if (webcam.config.debug) log('stop');
     if (webcam.track) webcam.track.stop();
-  }
+  };
 }

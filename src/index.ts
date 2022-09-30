@@ -6,7 +6,7 @@ const segmentationConfig: rvm.SegmentationConfig = {
   modelPath: '../models/mb3-i8/rvm.json',
   ratio: 0.5,
   mode: 'default',
-}
+};
 
 const log = (...msg) => console.log(...msg); // eslint-disable-line no-console
 
@@ -25,14 +25,14 @@ async function main() {
 
   const model = await rvm.load(segmentationConfig);
   log({ model });
+  const numTensors = tf.engine().state.numTensors;
 
   video.onplay = () => { // start processing on video play
     loop(); // eslint-disable-line no-use-before-define
   };
-  await webcam.start(video, { crop: true, width: 960, height: 720 });
+  await webcam.start({ element: 'video', crop: true, width: 960, height: 720 });
   if (!webcam.track) fps.innerText = 'webcam error';
 
-  const numTensors = tf.engine().state.numTensors;
   async function loop() { // inference loop
     if (!webcam.element || webcam.paused) return;
     const imageTensor = tf.browser.fromPixels(webcam.element);

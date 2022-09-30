@@ -14,7 +14,7 @@ const t: Record<string, tf.Tensor> = {}; // contains input tensor and recurrent 
 let ratio = 0;
 
 function init(config: SegmentationConfig) {
-  tf.dispose([t.r1i, t.r2i, t.r3i, t.r4i, t.downsample_ratio])
+  tf.dispose([t.r1i, t.r2i, t.r3i, t.r4i, t.downsample_ratio]);
   t.r1i = tf.tensor(0.0);
   t.r2i = tf.tensor(0.0);
   t.r3i = tf.tensor(0.0);
@@ -30,18 +30,18 @@ export async function load(config: SegmentationConfig): Promise<tf.GraphModel> {
 }
 
 function getRGBA(fgr: tf.Tensor | null, pha: tf.Tensor | null): tf.Tensor3D { // gets rgba // either fgr or pha must be present
-  const norm = (t: tf.Tensor) => tf.tidy(() => {
-    const squeeze = tf.squeeze(t, ([0]));
+  const norm = (r: tf.Tensor) => tf.tidy(() => {
+    const squeeze = tf.squeeze(r, ([0]));
     const mul = tf.mul(squeeze, 255);
     const cast = tf.cast(mul, 'int32');
     return cast as tf.Tensor3D;
   });
   const rgb = fgr
     ? norm(fgr) // normalize and use value
-    : tf.fill([pha!.shape[1] || 0, pha!.shape[2] || 0, 3], 255, 'int32'); // fill blank
+    : tf.fill([pha!.shape[1] || 0, pha!.shape[2] || 0, 3], 255, 'int32'); // eslint-disable-line @typescript-eslint/no-non-null-assertion
   const a = pha
     ? norm(pha) // normalize and use value
-    : tf.fill([fgr!.shape[1] || 0, fgr!.shape[2] || 0, 1], 255, 'int32'); //fill blank
+    : tf.fill([fgr!.shape[1] || 0, fgr!.shape[2] || 0, 1], 255, 'int32'); // eslint-disable-line @typescript-eslint/no-non-null-assertion
   const rgba = tf.concat([rgb, a], -1) as tf.Tensor3D;
   tf.dispose([rgb, a]);
   return rgba;
