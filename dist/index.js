@@ -58709,36 +58709,53 @@ var segmentationConfig = {
 };
 var log6 = (...msg) => console.log(...msg);
 async function main() {
-  const video = document.getElementById("video");
-  const canvas = document.getElementById("canvas");
-  const select4 = document.getElementById("select");
-  const ratio2 = document.getElementById("ratio");
-  const fps = document.getElementById("fps");
-  fps.innerText = "initializing";
+  const dom = {
+    video: document.getElementById("video"),
+    webcam: document.getElementById("webcam"),
+    output: document.getElementById("output"),
+    merge: document.getElementById("merge"),
+    mode: document.getElementById("mode"),
+    composite: document.getElementById("composite"),
+    ratio: document.getElementById("ratio"),
+    fps: document.getElementById("fps")
+  };
+  dom.fps.innerText = "initializing";
+  dom.ratio.valueAsNumber = segmentationConfig.ratio;
+  dom.video.src = "../assets/rijeka.mp4";
+  dom.composite.innerHTML = ["source-atop", "color", "color-burn", "color-dodge", "copy", "darken", "destination-atop", "destination-in", "destination-out", "destination-over", "difference", "exclusion", "hard-light", "hue", "lighten", "lighter", "luminosity", "multiply", "overlay", "saturation", "screen", "soft-light", "source-in", "source-out", "source-over", "xor"].map((gco) => `<option value="${gco}">${gco}</option>`).join("");
+  const ctxMerge = dom.merge.getContext("2d");
   await setBackend("webgl");
   await ready();
   env().set("WEBGL_USE_SHAPES_UNIFORMS", true);
-  log6({ tf: version, backend: getBackend() });
-  const model3 = await load(segmentationConfig);
-  log6({ model: model3 });
+  await load(segmentationConfig);
+  log6({ segmentationConfig });
+  log6({ tf: version, backend: getBackend(), state: engine().state });
   const numTensors = engine().state.numTensors;
-  video.onplay = () => {
+  dom.webcam.onplay = () => {
     loop();
+    dom.output.width = webcam2.width;
+    dom.output.height = webcam2.height;
+    dom.merge.width = webcam2.width;
+    dom.merge.height = webcam2.height;
   };
-  await webcam2.start({ element: "video", crop: true, width: 960, height: 720 });
+  await webcam2.start({ element: dom.webcam, crop: true, width: 960, height: 720 });
   if (!webcam2.track)
-    fps.innerText = "webcam error";
+    dom.fps.innerText = "webcam error";
   async function loop() {
     if (!webcam2.element || webcam2.paused)
       return;
     const imageTensor = browser_exports.fromPixels(webcam2.element);
     const t0 = Date.now();
-    segmentationConfig.mode = select4.value;
-    segmentationConfig.ratio = ratio2.valueAsNumber;
+    segmentationConfig.mode = dom.mode.value;
+    segmentationConfig.ratio = dom.ratio.valueAsNumber;
     const rgba = await predict(imageTensor, segmentationConfig);
     const t1 = Date.now();
-    fps.innerText = `fps: ${Math.round(1e4 / (t1 - t0)) / 10}`;
-    browser_exports.toPixels(rgba, canvas);
+    dom.fps.innerText = `fps: ${Math.round(1e4 / (t1 - t0)) / 10}`;
+    browser_exports.toPixels(rgba, dom.output);
+    ctxMerge.globalCompositeOperation = "source-over";
+    ctxMerge.drawImage(dom.video, 0, 0);
+    ctxMerge.globalCompositeOperation = dom.composite.value;
+    ctxMerge.drawImage(dom.output, 0, 0);
     dispose([imageTensor, rgba]);
     if (numTensors !== engine().state.numTensors)
       log6({ leak: engine().state.numTensors - numTensors });

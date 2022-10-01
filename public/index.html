@@ -23,24 +23,27 @@
     <div id="nav" class="nav"></div>
   </nav>
   <header>
-    <div id="header" class="header" style="position: fixed; top: 0; right: 0; padding: 4px; margin: 16px; background: rgba(0, 0, 0, 0.5); z-index: 10;">
-      <label for="select">output</label>
-      <select id="select" name="select">
+    <div id="header" class="header" style="position: fixed; top: 0; right: 0; padding: 4px; margin: 16px; background: rgba(0, 0, 0, 0.5); z-index: 10; line-height: 2rem;">
+      <label for="mode">mode</label>
+      <select id="mode" name="mode">
         <option value="default">remove background</option>
         <option value="alpha">draw alpha channel</option>
         <option value="foreground">full foreground</option>
         <option value="state">recurrent state</option>
-      </select>
-      <div style="margin-top: 8px">ratio
-        <input type="range" id="ratio" min="0.1" max="1" value="0.5" step="0.1">
-      </div>
+      </select><br>
+      <label for="composite">composite</label>
+      <select id="composite" name="composite"></select><br>
+      <label for="ratio">downsample ratio</label>
+      <input type="range" name="ratio" id="ratio" min="0.1" max="1" value="0.5" step="0.05">
       <div id="fps" style="margin-top: 8px"></div>
     </div>
   </header>
   <main>
     <div id="main" class="main">
-      <video id="video"></video>
-      <canvas id="canvas"></canvas>
+      <video id="webcam" style="position: fixed; top: 0; left: 0; width: 50vw; height: 50vh"></video>
+      <video id="video" style="position: fixed; top: 0; right: 0; width: 50vw; height: 50vh" controls></video>
+      <canvas id="output" style="position: fixed; bottom: 0; left: 0; width: 50vw; height: 50vh"></canvas>
+      <canvas id="merge" style="position: fixed; bottom: 0; right: 0; width: 50vw; height: 50vh"></canvas>
     </div>
   </main>
   <footer>
