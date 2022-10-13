@@ -1,6 +1,17 @@
 import * as tf from '@tensorflow/tfjs';
 
+/**
+ * Segmentation mode controls values returned by `predict` method
+ * - `default` returns RGBA 4-channel tensor
+ * - `alpha` returns Alpha 1-channel tensor
+ * - `foreground` returns RGBA internally calculated foreground states
+ * - `state` returns internal recurrent states as transferred between frames
+ */
 export type SegmentationMode = 'default' | 'alpha' | 'foreground' | 'state';
+
+/**
+ * RVM Segmentation Model configuration
+ */
 export type SegmentationConfig = {
   modelPath: string,
   ratio: number,
@@ -23,6 +34,13 @@ function init(config: SegmentationConfig) {
   t.downsample_ratio = tf.tensor(config.ratio); // initialize downsample ratio
 }
 
+/**
+ * Loads RVM graph model from location specified in `config.modelPath`
+ * and initialized initial states
+ *
+ * @param config SegmentationConfig
+ * @returns GraphModel
+ */
 export async function load(config: SegmentationConfig): Promise<tf.GraphModel> {
   model = await tf.loadGraphModel(config.modelPath);
   init(config);
@@ -64,7 +82,14 @@ function getState(state: tf.Tensor): tf.Tensor3D { // gets internal recurrent st
     return tf.concat([r.tile, r.alpha], -1) as tf.Tensor3D;
   });
 }
-
+/**
+ * Runs model prediction based and returns processed image as tensor
+ * Note that execution speed is directly related to input image resolution
+ *
+ * @param tensor Input tensor representing RGB image [width, height, channels = 3] where width and height can be dynamic
+ * @param config Controls model post-processing and return values
+ * @returns Tensor as [width, height, channels] where channels can be 4 (full RGBA) or 1(alpha-only) depending on `config`
+ */
 export async function predict(tensor: tf.Tensor, config: SegmentationConfig): Promise<tf.Tensor3D> {
   const expand = tf.expandDims(tensor, 0);
   t.src = tf.div(expand, 255);
