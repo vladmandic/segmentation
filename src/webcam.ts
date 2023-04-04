@@ -89,7 +89,7 @@ export class webcam { // eslint-disable-line @typescript-eslint/no-extraneous-cl
     }
 
     // set constraints to use
-    const requestedConstraints: DisplayMediaStreamConstraints = {
+    const requestedConstraints: MediaStreamConstraints = {
       audio: false,
       video: {
         facingMode: webcam.config.mode === 'front' ? 'user' : 'environment',
